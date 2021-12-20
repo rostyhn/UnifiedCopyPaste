@@ -1,0 +1,28 @@
+[package]
+name = "unified_copy_paste"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "server"
+src = "src/bin/server.rs"
+
+[[bin]]
+name = "daemon"
+src = "src/bin/daemon.rs"
+
+[dependencies]
+x11-clipboard = "0.5.3"
+daemonize = "0.4.1"
+reqwest = { version = "0.11", features = ["json", "blocking"] }
+tokio = { version = "1", features = ["full"] }
+rocket = { version = "0.4.10" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rocket_cors = "0.5.1"
+
+[dependencies.rocket_contrib]
+version = "0.4.10"
+default-features = false
+features = ["handlebars_templates", "json"]
+
