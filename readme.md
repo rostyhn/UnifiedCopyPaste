@@ -4,7 +4,7 @@ Programs that bring all of your clipboards together in one place, easily accessi
 # Usage
 Comes with two components: a daemon, and a server. The daemon waits for your clipboard's contents to change, and then uses a `POST` request to get them on the server component. You can then login to the server to see your clipboard's contents from another machine, and copy / modify it.
 
-While there isn't a seperate executable to copy the server's clipboard contents yet, included within `scripts` is a sample .sh script that you could bind to a key in your favorite window / desktop manager to copy the server's clipboard contents.
+While there isn't a separate executable to copy the server's clipboard contents yet, included within `scripts` is a sample .sh script that you could bind to a key in your favorite window / desktop manager to copy the server's clipboard contents.
 
 ## Sample script 
 The script itself is a simple one-liner:
@@ -19,7 +19,7 @@ I have this script bound to my i3 config like so:
 ```
 bindsym $mod+Shift+c exec "PATH_TO_PROGRAM/scripts/get_clipboard.sh"
 ```
-# Compatability
+# Compatibility
 Currently, the daemon only works with Linux machines running the X11 windowing system.
 
 # TODO

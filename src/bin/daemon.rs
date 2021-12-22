@@ -6,10 +6,35 @@ use x11_clipboard::Clipboard;
 
 use std::collections::HashMap;
 use daemonize::Daemonize;
+use structopt::StructOpt;
 
+#[derive(Debug, StructOpt)]
+struct Args {
+    #[structopt(short,long, default_value="http://localhost")]
+    url: String,
+    #[structopt(short,long, default_value="8000")]
+    port: String,
+}
+
+fn sanitize_input(opt: &mut Args) {
+    
+    if !opt.url.starts_with("http://") && !opt.url.starts_with("https://") {
+	opt.url.insert_str(0,"http://");
+    }
+
+    if opt.url.ends_with(":") {
+	opt.url.pop();
+    }
+    
+    if opt.port.starts_with(":") {
+	opt.port.remove(0);
+    }
+}
 
 fn main() {    
-
+    let mut opt = Args::from_args();    
+    sanitize_input(&mut opt);    
+    
     let stdout = File::create("tmp/daemon.out").unwrap();
     let stderr = File::create("tmp/daemon.err").unwrap();
     
@@ -39,16 +64,21 @@ fn main() {
                 .trim();
             if !curr.is_empty() && last != curr {
                 last = curr.to_owned();                
-		let _ = post_clipboard(last.to_owned());
+		let _ = post_clipboard(&last.to_owned(), &opt);
             }
         }        
     }
 }
 
-fn post_clipboard(contents: String) -> Result<(), reqwest::Error> {    
+fn post_clipboard(contents: &String, opt: &Args) -> Result<(), reqwest::Error> {    
     let mut map = HashMap::new();
-    map.insert("text", &contents);
-    let res = reqwest::blocking::Client::new().post("http://localhost:8000/api/set_clipboard").json(&map).send()?;    
+    map.insert("text", contents);
+    let mut url_string = String::from(&opt.url);
+    url_string.push(':');
+    url_string.push_str(&opt.port);
+    url_string.push_str("/api/set_clipboard");
+    
+    let res = reqwest::blocking::Client::new().post(url_string).json(&map).send()?;    
     Ok(())
 }
 

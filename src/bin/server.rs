@@ -8,9 +8,6 @@ use serde::Deserialize;
 
 use rocket::State;
 use rocket::http::Status;
-use rocket::http::Method;
-
-use rocket_cors::{AllowedOrigins, CorsOptions};
 
 use rocket_contrib::templates::Template;
 use std::collections::HashMap;
@@ -41,20 +38,9 @@ fn set_clipboard(contents: Json<ClipboardContents<'_>>, clipboard: State<Mutex<S
 }
 
 fn main() {
-
-    let cors = CorsOptions::default()
-    .allowed_origins(AllowedOrigins::all())
-    .allowed_methods(
-        vec![Method::Get, Method::Post, Method::Patch]
-            .into_iter()
-            .map(From::from)
-            .collect(),
-    ).allow_credentials(true);
-    
     rocket::ignite()
 	.mount("/", routes![index])
 	.mount("/api", routes![set_clipboard, get_clipboard])
-	.manage(Mutex::new(String::from("Init string")))
-	.attach(cors.to_cors().unwrap())
+	.manage(Mutex::new(String::from("Init string")))        
 	.attach(Template::fairing()).launch();
 }
