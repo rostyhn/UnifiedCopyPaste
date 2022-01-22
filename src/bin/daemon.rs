@@ -1,7 +1,7 @@
 extern crate x11_clipboard;
 extern crate daemonize;
 
-use std::fs::File;
+use std::fs::{File, read_to_string};
 use x11_clipboard::Clipboard;
 
 use std::collections::HashMap;
@@ -14,12 +14,14 @@ struct Args {
     url: String,
     #[structopt(short,long, default_value="8000")]
     port: String,
+    #[structopt(short,long)]
+    kill: bool
 }
 
 fn sanitize_input(opt: &mut Args) {
     
     if !opt.url.starts_with("http://") && !opt.url.starts_with("https://") {
-	opt.url.insert_str(0,"http://");
+	opt.url.insert_str(0, "http://");
     }
 
     if opt.url.ends_with(":") {
@@ -35,12 +37,24 @@ fn main() {
     let mut opt = Args::from_args();    
     sanitize_input(&mut opt);    
     
-    let stdout = File::create("tmp/daemon.out").unwrap();
-    let stderr = File::create("tmp/daemon.err").unwrap();
+    let stdout = File::create("daemon.out").unwrap();
+    let stderr = File::create("daemon.err").unwrap();
+
+    if opt.kill {
+	let status = match read_to_string("daemon.pid") {
+	    Ok(contents) => std::process::Command::new("kill").arg(contents).status(),
+	    Err(e) => Err(e) 
+	};
+
+	if status.is_err() {
+            println!("Failed to stop daemon.");
+	}	    			
+        std::process::exit(1)
+    }
     
     let daemon = Daemonize::new()
 	.stdout(stdout)
-	.stderr(stderr);
+	.stderr(stderr).pid_file("daemon.pid");
     
     match daemon.start() {
         Ok(_) => println!("Started daemon!"),

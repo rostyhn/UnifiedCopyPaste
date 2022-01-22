@@ -17,7 +17,7 @@ This of course assumes the server is running on the same machine you're calling 
 I have this script bound to my i3 config like so:
 
 ```
-bindsym $mod+Shift+c exec "PATH_TO_PROGRAM/scripts/get_clipboard.sh"
+bindsym $mod+Shift+c exec "PATH_TO_DAEMON/scripts/get_clipboard.sh"
 ```
 # Compatibility
 Currently, the daemon only works with Linux machines running the X11 windowing system.
