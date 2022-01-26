@@ -16,13 +16,14 @@ x11-clipboard = "0.5.3"
 daemonize = "0.4.1"
 reqwest = { version = "0.11", features = ["json", "blocking"] }
 tokio = { version = "1", features = ["full"] }
-rocket = { version = "0.4.10" }
+rocket = { version = "0.5.0-rc.1", features=["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 structopt = { version = "0.3", default-features = false }
+hostname = "^0.3"
 
-[dependencies.rocket_contrib]
-version = "0.4.10"
-default-features = false
-features = ["handlebars_templates", "json"]
+[dependencies.rocket_dyn_templates]
+version = "0.1.0-rc.1"
+features = ["tera"]
+
 

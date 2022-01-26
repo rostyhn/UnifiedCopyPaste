@@ -8,6 +8,8 @@ use std::collections::HashMap;
 use daemonize::Daemonize;
 use structopt::StructOpt;
 
+
+
 #[derive(Debug, StructOpt)]
 struct Args {
     #[structopt(short,long, default_value="http://localhost")]
@@ -15,7 +17,9 @@ struct Args {
     #[structopt(short,long, default_value="8000")]
     port: String,
     #[structopt(short,long)]
-    kill: bool
+    kill: bool,
+    #[structopt(short,long, default_value="")]
+    hostname: String
 }
 
 fn sanitize_input(opt: &mut Args) {
@@ -48,7 +52,7 @@ fn main() {
 
 	if status.is_err() {
             println!("Failed to stop daemon.");
-	}	    			
+	}		
         std::process::exit(1)
     }
     
@@ -59,6 +63,17 @@ fn main() {
     match daemon.start() {
         Ok(_) => println!("Started daemon!"),
         Err(e) => eprintln!("ERROR: {}", e),
+    };
+
+    if opt.hostname.trim().is_empty() {
+	match hostname::get() {
+	    Ok(host) => {
+		opt.hostname = host.into_string().unwrap();
+		let _ = post_clipboard(&String::from("Initial String"), &opt);
+	    }
+	    Err(e) => eprintln!("Error: {}", e),
+	};
+	
     }
 
     let mut last = String::new();
@@ -84,15 +99,21 @@ fn main() {
     }
 }
 
+/*fn kill_clipboard(opt: &Args) -> Result<(), reqwest::Error> {
+    Ok(())
+}*/
+
 fn post_clipboard(contents: &String, opt: &Args) -> Result<(), reqwest::Error> {    
     let mut map = HashMap::new();
-    map.insert("text", contents);
+    map.insert("text", contents);    
+    map.insert("hostname", &opt.hostname);
+    
     let mut url_string = String::from(&opt.url);
     url_string.push(':');
     url_string.push_str(&opt.port);
     url_string.push_str("/api/set_clipboard");
     
-    let res = reqwest::blocking::Client::new().post(url_string).json(&map).send()?;    
+    let _res = reqwest::blocking::Client::new().post(url_string).json(&map).send()?;    
     Ok(())
 }
 

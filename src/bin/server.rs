@@ -1,46 +1,56 @@
-#![feature(proc_macro_hygiene, decl_macro)]
-#[macro_use] extern crate rocket; // using rocket 0.4.10
+#[macro_use] extern crate rocket; 
 
 use std::sync::Mutex;
-
-use rocket_contrib::json::Json;
-use serde::Deserialize;
-
 use rocket::State;
-use rocket::http::Status;
 
-use rocket_contrib::templates::Template;
+use rocket::http::Status;
+use rocket::serde::{Deserialize, json::Json};
+use rocket_dyn_templates::Template;
+
 use std::collections::HashMap;
 
 #[derive(Deserialize)]
-struct ClipboardContents<'r> {
-    text: &'r str
+struct ClipboardContents {
+    text: String,
+    hostname: String
 }
 
-#[get("/")]
-fn index(clipboard: State<Mutex<String>>) -> Template {
-    let data = clipboard.lock().unwrap();
-    let context: HashMap<&str, &str> = [("clipboard", data.as_str())].iter().cloned().collect();
-    Template::render("index", &context)
+
+#[get("/get_clipboard/<hostname>")]
+fn get_clipboard(clipboard: &State<Mutex<HashMap<String,String>>>, hostname: String) -> String {   
+    let data = clipboard.lock().unwrap();    
+    format!("{}", data[&hostname].as_str())
 }
 
-#[get("/get_clipboard")]
-fn get_clipboard(clipboard: State<Mutex<String>>) -> String {
-    format!("{}", clipboard.lock().unwrap().as_str())
+#[get("/get_clipboards")]
+fn get_clipboards(clipboard: &State<Mutex<HashMap<String,String>>>) -> Json<HashMap<String, String>> {
+    let data = clipboard.lock().unwrap();    
+    Json(data.clone())
 }
 
 #[post("/set_clipboard", format = "application/json", data="<contents>")]
-fn set_clipboard(contents: Json<ClipboardContents<'_>>, clipboard: State<Mutex<String>>) -> Status {    
+fn set_clipboard(contents: Json<ClipboardContents>, clipboard: &State<Mutex<HashMap<String,String>>>) -> Status {    
     let mut data = clipboard.lock().unwrap();
-    data.clear();
-    data.push_str(contents.text);
+    data.insert(contents.hostname.to_string(), contents.text.to_string());    
     Status::Accepted
 }
 
-fn main() {
-    rocket::ignite()
+#[get("/")]
+pub fn index(clipboard: &State<Mutex<HashMap<String,String>>>) -> Template {
+    let data = clipboard.lock().unwrap();
+    dbg!(&data);
+    Template::render("index", &*data)
+}
+
+#[launch]
+fn rocket() -> _ {
+
+    let mut hmap = HashMap::<String,String>::new();
+    hmap.insert("Server Clipboard".to_string(), "Initial String".to_string());
+    
+    rocket::build()
 	.mount("/", routes![index])
-	.mount("/api", routes![set_clipboard, get_clipboard])
-	.manage(Mutex::new(String::from("Init string")))        
-	.attach(Template::fairing()).launch();
+	.mount("/api", routes![set_clipboard, get_clipboards, get_clipboard])
+	.manage(Mutex::new(hmap))        
+	.attach(Template::fairing())
 }

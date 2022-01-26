@@ -3,16 +3,15 @@
 </head>
 <body>
 <h1>Unified Copy Paste</h1>
-<div>
-  <p><b>Current contents</b>: {{clipboard}}</p>
-  <p><input type="text" id="change_clipboard"></p>
-  <p id="status"></p>
-</div>
+
+<p>{{__tera_context}}</p>
+<p><input type="text" id="change_clipboard"></p>
+<p id="status"></p>
 
 <script>
   function change_clipboard(event) {      
       var new_content = document.getElementById("change_clipboard").value;
-      var data = { text: new_content };
+      var data = { hostname: "Server Clipboard", text: new_content };
       var statusText = document.getElementById("status");
 
       fetch("/api/set_clipboard", {
