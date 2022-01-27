@@ -7,7 +7,7 @@ Comes with two components: a daemon, and a server. The daemon waits for your cli
 While there isn't a separate executable to copy the server's clipboard contents yet, included within `scripts` is a sample .sh script that you could bind to a key in your favorite window / desktop manager to copy the server's clipboard contents.
 
 ## Sample script 
-The script itself is a simple one-liner:
+The script `get_clipboard.sh` itself is a simple one-liner:
 ```
 curl -X GET http://localhost:8000/api/get_clipboard | xclip -sel clip
 ```
@@ -19,14 +19,24 @@ I have this script bound to my i3 config like so:
 ```
 bindsym $mod+Shift+c exec "PATH_TO_DAEMON/scripts/get_clipboard.sh"
 ```
+
+I have since added a rofi script that shows a list of the clipboards available on the server, and copies their contents on selection, which is pretty cool. Theoretically, should work with dmenu as well - I'll make the script agnostic later.
+
 # Compatibility
 Currently, the daemon only works with Linux machines running the X11 windowing system.
 
+The web page has been written with touch-screen devices in mind, which was the original use case - I wanted to write a program that would let me send links back and forth between my phone and my computer without having to email myself everytime. 
+
+# Testing
+Included inside the tests folder is a file called api_tests.org that lets you query the server using emacs verb. In the future, I'll add the curl equivalents underneath, but it should be fairly obvious what the queries should be.
+
 # TODO
-- Options for daemon to target a server running on another machine
-- Add option to have multiple clipboards available on server from multiple machines
+🗸 Options for daemon to target a server running on another machine
+🗸 Add option to have multiple clipboards available on server from multiple machines
+🗸 Added sample rofi menu script
+- Rewrite some portions of the code more rustily
+- Beautify web page
 - Windows support
 - Mac support (don't count on it)
 - Authentication / password protection
 - Some strings cannot be copied, figure that out
-- "Quiet mode" for daemon to stop sending clipboard output for some time
