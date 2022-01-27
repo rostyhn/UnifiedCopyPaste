@@ -81,13 +81,13 @@
       var data = {text: new_content};
       var statusText = document.getElementById("status");
 
-      fetch("/api/set_clipboard/Server%20Clipboard", {
+      fetch("/api/set_clipboard/server_clipboard", {
 	  headers: { "Content-Type": "application/json",
 		     'Access-Control-Allow-Origin': 'http://localhost:8000/' },
 	  body: JSON.stringify(data),
 	  method: "POST"
       }).then(function() {
-	  var server_clipboard = document.getElementById("Server Clipboard");
+	  var server_clipboard = document.getElementById("server_clipboard");
 	  server_clipboard.innerText = new_content;
 	  displayStatusMessage(statusText, "Server clipboard changed!");          
       }).catch(function(error) {		

@@ -3,7 +3,7 @@ Use this file to test the API provided by the server using the emacs plugin [[ht
 * Get Clipboards :verb:
 get http://localhost:8000/api/get_clipboards
 * Get Clipboard by name :verb:
-get http://localhost:8000/api/get_clipboard/Server%20Clipboard
+get http://localhost:8000/api/get_clipboard/server-clipboard
 * Kill Clipboard :verb:
 post http://localhost:8000/api/kill_clipboard/RestAPIUser
 * Set Clipboard  :verb:

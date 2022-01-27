@@ -60,7 +60,7 @@ pub fn index(clipboard: &State<Mutex<HashMap<String,String>>>) -> Template {
 fn rocket() -> _ {
 
     let mut hmap = HashMap::<String,String>::new();
-    hmap.insert("Server Clipboard".to_string(), "Initial String".to_string());
+    hmap.insert("server_clipboard".to_string(), "Initial String".to_string());
     
     rocket::build()
 	.mount("/", routes![index])
