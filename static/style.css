@@ -1,6 +1,9 @@
+h1 {
+    text-align: center;
+}
+
 body {
-    width:80%;
+    width:95%;
     margin:auto;
     margin-top: 2.5%;
-    text-align:center;
 }

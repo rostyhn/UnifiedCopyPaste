@@ -5,13 +5,16 @@
 </head>
 <body>
 <h1>Unified Copy Paste</h1>
+<div>
 {% for hostname, contents in clipboards %}
 <h2 class="hostname-title">{{hostname}}</h2>
 <p id="{{hostname}}" hidden="true" class="clipboard-contents">{{contents}}</p>
 {% endfor %}
+</div>
 <p>
 <label for="change_clipboard">Change server clipboard contents: </label> <input type="text" id="change_clipboard"></p>
 <p id="status"></p>
+<p id="inst">Instructions: Click any host-name to copy the clipboard from that source. You can use the textbox to change the server's clipboard.</p>
 <script>
 
   const isTouchDevice = () => {
@@ -95,7 +98,6 @@
   }
   
   document.getElementById("change_clipboard").addEventListener("change", change_clipboard);
-
   var hostname_titles = document.getElementsByClassName("hostname-title");
 
   if(isTouchDevice()) {
@@ -113,7 +115,14 @@
       } else {
 	  title.addEventListener("click", iosCopyToClipboard);
       }
-  }  
+  }
+
+  setTimeout(function() {
+      document.getElementById("inst").style.display = 'none';
+  }, 2000);
+  
+
+  
   
 </script>
 </body>
