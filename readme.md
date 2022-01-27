@@ -31,9 +31,9 @@ The web page has been written with touch-screen devices in mind, which was the o
 Included inside the tests folder is a file called api_tests.org that lets you query the server using emacs verb. In the future, I'll add the curl equivalents underneath, but it should be fairly obvious what the queries should be.
 
 # TODO
-🗸 Options for daemon to target a server running on another machine
-🗸 Add option to have multiple clipboards available on server from multiple machines
-🗸 Added sample rofi menu script
+- 🗸 Options for daemon to target a server running on another machine
+- 🗸 Add option to have multiple clipboards available on server from multiple machines
+- 🗸 Added sample rofi menu script
 - Rewrite some portions of the code more rustily
 - Beautify web page
 - Windows support
