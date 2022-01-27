@@ -11,8 +11,7 @@ use std::collections::HashMap;
 
 #[derive(Deserialize)]
 struct ClipboardContents {
-    text: String,
-    hostname: String
+    text: String    
 }
 
 #[post("/kill_clipboard/<hostname>")]
@@ -34,10 +33,10 @@ fn get_clipboards(clipboard: &State<Mutex<HashMap<String,String>>>) -> Json<Hash
     Json(data.clone())
 }
 
-#[post("/set_clipboard", format = "application/json", data="<contents>")]
-fn set_clipboard(contents: Json<ClipboardContents>, clipboard: &State<Mutex<HashMap<String,String>>>) -> Status {    
+#[post("/set_clipboard/<hostname>", format = "application/json", data="<contents>")]
+fn set_clipboard(contents: Json<ClipboardContents>, clipboard: &State<Mutex<HashMap<String,String>>>, hostname: String) -> Status {    
     let mut data = clipboard.lock().unwrap();
-    data.insert(contents.hostname.to_string(), contents.text.to_string());    
+    data.insert(hostname, contents.text.to_string());    
     Status::Accepted
 }
 

@@ -142,12 +142,12 @@ fn kill_clipboard(opt: &Args) -> Result<(), reqwest::Error> {
 fn post_clipboard(contents: &String, opt: &Args) -> Result<(), reqwest::Error> {    
     let mut map = HashMap::new();
     map.insert("text", contents);    
-    map.insert("hostname", &opt.hostname);
-    
+
     let mut url_string = String::from(&opt.url);
     url_string.push(':');
     url_string.push_str(&opt.port);
-    url_string.push_str("/api/set_clipboard");
+    url_string.push_str("/api/set_clipboard/");
+    url_string.push_str(&opt.hostname);
     
     let _res = reqwest::blocking::Client::new().post(url_string).json(&map).send()?;    
     Ok(())

@@ -4,13 +4,14 @@ Use this file to test the API provided by the server using the emacs plugin [[ht
 get http://localhost:8000/api/get_clipboards
 * Get Clipboard by name :verb:
 get http://localhost:8000/api/get_clipboard/Server%20Clipboard
-* Set Clipboard :verb:
-post http://localhost:8000/api/set_clipboard
+* Kill Clipboard :verb:
+post http://localhost:8000/api/kill_clipboard/RestAPIUser
+* Set Clipboard  :verb:
+post http://localhost:8000/api/set_clipboard/RestAPIUser
 Content-Type: application/json; charset=utf-8
 
 {
-    "text" : "I changed the clipboard contents",
-    "hostname" : "RestAPI_User"
+    "text" : "I changed the clipboard contents"
 }
-* Kill Clipboard :verb:
-post http://localhost:8000/api/kill_clipboard/RestAPI_User
+
+
