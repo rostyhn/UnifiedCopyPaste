@@ -15,6 +15,12 @@ struct ClipboardContents {
     hostname: String
 }
 
+#[post("/kill_clipboard/<hostname>")]
+fn kill_clipboard(clipboard: &State<Mutex<HashMap<String,String>>>, hostname: String) -> Status {
+    let mut data = clipboard.lock().unwrap();
+    data.remove(&hostname);
+    Status::Accepted
+}
 
 #[get("/get_clipboard/<hostname>")]
 fn get_clipboard(clipboard: &State<Mutex<HashMap<String,String>>>, hostname: String) -> String {   
@@ -50,7 +56,7 @@ fn rocket() -> _ {
     
     rocket::build()
 	.mount("/", routes![index])
-	.mount("/api", routes![set_clipboard, get_clipboards, get_clipboard])
+	.mount("/api", routes![set_clipboard, get_clipboards, get_clipboard, kill_clipboard])
 	.manage(Mutex::new(hmap))        
 	.attach(Template::fairing())
 }
