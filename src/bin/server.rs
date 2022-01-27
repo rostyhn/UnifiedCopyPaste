@@ -4,14 +4,21 @@ use std::sync::Mutex;
 use rocket::State;
 
 use rocket::http::Status;
-use rocket::serde::{Deserialize, json::Json};
+use rocket::serde::{Deserialize, json::Json, Serialize};
 use rocket_dyn_templates::Template;
+
+use rocket::fs::FileServer;
 
 use std::collections::HashMap;
 
 #[derive(Deserialize)]
 struct ClipboardContents {
     text: String    
+}
+
+#[derive(Serialize)]
+struct TemplateContext {
+    clipboards: HashMap<String,String>
 }
 
 #[post("/kill_clipboard/<hostname>")]
@@ -43,8 +50,10 @@ fn set_clipboard(contents: Json<ClipboardContents>, clipboard: &State<Mutex<Hash
 #[get("/")]
 pub fn index(clipboard: &State<Mutex<HashMap<String,String>>>) -> Template {
     let data = clipboard.lock().unwrap();
-    dbg!(&data);
-    Template::render("index", &*data)
+            
+    Template::render("index", &TemplateContext {
+	clipboards: data.clone()
+    })
 }
 
 #[launch]
@@ -56,6 +65,7 @@ fn rocket() -> _ {
     rocket::build()
 	.mount("/", routes![index])
 	.mount("/api", routes![set_clipboard, get_clipboards, get_clipboard, kill_clipboard])
+	.mount("/res", FileServer::from("static"))
 	.manage(Mutex::new(hmap))        
 	.attach(Template::fairing())
 }
