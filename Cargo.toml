@@ -1,15 +1,16 @@
 [package]
 name = "unified_copy_paste"
 version = "0.2.0"
-edition = "2022"
+edition = "2021"
+default-run = "ucp-server"
 
 [[bin]]
-name = "server"
-src = "src/bin/server.rs"
+name = "ucp-server"
+src = "src/bin/ucp-server.rs"
 
 [[bin]]
-name = "daemon"
-src = "src/bin/daemon.rs"
+name = "ucp-daemon"
+src = "src/bin/ucp-daemon.rs"
 
 [dependencies]
 x11-clipboard = "0.5.3"

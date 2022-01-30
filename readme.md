@@ -34,7 +34,6 @@ Included inside the tests folder is a file called api_tests.org that lets you qu
 - 🗸 Options for daemon to target a server running on another machine
 - 🗸 Add option to have multiple clipboards available on server from multiple machines
 - 🗸 Added sample rofi menu script
-- Rewrite some portions of the code more rustily
 - Beautify web page
 - Windows support
 - Mac support (don't count on it)
