@@ -1,0 +1,15 @@
+Info 0    [12:49:42.472] Starting TS Server
+Info 1    [12:49:42.473] Version: 4.6.2
+Info 2    [12:49:42.473] Arguments: /usr/bin/node /usr/lib/node_modules/typescript/lib/tsserver.js --logFile /home/frosty/Programs/Rust/UnifiedCopyPaste/.log/tsserver.log --logVerbosity info --cancellationPipeName /tmp/39bc8ff0182f2f37b0864ddc7a68d693/tscancellation*
+Info 3    [12:49:42.473] Platform: linux NodeVersion: 17 CaseSensitive: true
+Info 4    [12:49:42.473] ServerMode: undefined syntaxOnly: false hasUnknownServerMode: undefined
+Info 5    [12:49:42.489] Format host information updated
+Info 6    [12:49:43.678] Search path: /home/frosty/Programs/Rust/UnifiedCopyPaste/templates
+Info 7    [12:49:43.679] For info: /home/frosty/Programs/Rust/UnifiedCopyPaste/templates/index.html.tera :: No config files found.
+Info 8    [12:49:43.684] Starting updateGraphWorker: Project: /dev/null/inferredProject1*
+Info 9    [12:49:44.498] Finishing updateGraphWorker: Project: /dev/null/inferredProject1* Version: 1 structureChanged: true structureIsReused:: Not Elapsed: 813.1868540002033ms
+Info 10   [12:49:44.498] Project '/dev/null/inferredProject1*' (Inferred)
+Info 11   [12:49:44.498] 	Files (19)
+
+Info 12   [12:49:44.498] -----------------------------------------------
+Info 13   [12:50:19.547] Exiting...

@@ -11,7 +11,8 @@ post http://localhost:8000/api/set_clipboard/RestAPIUser
 Content-Type: application/json; charset=utf-8
 
 {
-    "text" : "I changed the clipboard contents"
+    "contents" : "I changed the clipboard contents",
+    "passphrase": "a passphrase"
 }
 
 

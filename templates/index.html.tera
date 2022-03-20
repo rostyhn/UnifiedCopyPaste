@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
 <title>Unified Copy Paste</title>
@@ -8,11 +9,13 @@
 <div>
 {% for hostname, contents in clipboards %}
 <h2 class="hostname-title">{{hostname}}</h2>
-<p id="{{hostname}}" hidden="true" class="clipboard-contents">{{contents}}</p>
+<p id="{{hostname}}" hidden="true" class="clipboard-contents">{{contents.contents}}</p>
 {% endfor %}
 </div>
 <p>
-<label for="change_clipboard">Change server clipboard contents: </label> <input type="text" id="change_clipboard"></p>
+  <label for="change_clipboard">Change server clipboard contents: </label>
+  <input type="text" id="change_clipboard">
+</p>
 <p id="status"></p>
 <p id="inst">Instructions: Click any host-name to copy the clipboard from that source. You can use the textbox to change the server's clipboard.</p>
 <script>
@@ -78,7 +81,7 @@
   
   function change_clipboard(event) {
       var new_content = document.getElementById("change_clipboard").value;
-      var data = {text: new_content};
+      var data = {contents: new_content, passphrase: '', hostname: 'server_clipboard'};
       var statusText = document.getElementById("status");
 
       fetch("/api/set_clipboard/server_clipboard", {
@@ -120,10 +123,7 @@
   setTimeout(function() {
       document.getElementById("inst").style.display = 'none';
   }, 2000);
-  
-
-  
-  
+    
 </script>
 </body>
 </html>

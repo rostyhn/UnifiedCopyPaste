@@ -11,6 +11,8 @@ use structopt::StructOpt;
 
 use serde::{Deserialize, Serialize};
 
+
+
 #[derive(Debug, StructOpt, Serialize, Deserialize)]
 struct Args {
     #[structopt(short, long, default_value = "http://localhost")]
@@ -21,6 +23,8 @@ struct Args {
     kill: bool,
     #[structopt(short, long, default_value = "")]
     hostname: String,
+    #[structopt(long, default_value = "")]
+    passphrase: String
 }
 
 fn main() {
@@ -82,11 +86,11 @@ fn main() {
 
     let client = reqwest::blocking::Client::new();
 
-    match post_clipboard(&String::from("Initial String"), &opt, &client) {
+    match create_clipboard(&opt, &client) {
         Ok(_) => (),
         Err(e) => eprintln!("{}", e),
-    };
-
+    };    
+    
     let mut last = String::new();
     let clipboard = Clipboard::new().unwrap();
 
@@ -99,7 +103,8 @@ fn main() {
             clipboard.getter.atoms.property,
         ) {
             let curr = String::from_utf8_lossy(&curr);
-            let curr = curr.trim_matches('\u{0}').trim();
+            let curr = curr.trim_matches('\u{0}').trim();          
+            
             if !curr.is_empty() && last != curr {
                 last = curr.to_owned();
                 match post_clipboard(&last.to_owned(), &opt, &client) {
@@ -125,32 +130,54 @@ fn sanitize_input(opt: &mut Args) {
     }
 }
 
-fn kill_clipboard(opt: &Args) -> Result<(), reqwest::Error> {
+fn build_url(opt: &Args, url_path: &String) -> String {
+
     let mut url_string = String::from(&opt.url);
     url_string.push(':');
     url_string.push_str(&opt.port);
-    url_string.push_str("/api/kill_clipboard/");
+    url_string.push_str(url_path);
     url_string.push_str(&opt.hostname);
 
-    reqwest::blocking::Client::new().post(url_string).send()?;
+    url_string
+    
+}
+
+fn kill_clipboard(opt: &Args) -> Result<(), reqwest::Error> {
+
+    let mut map = HashMap::new();
+    map.insert("passphrase", &opt.passphrase);
+
+    let url = build_url(opt, &"/api/kill_clipboard/".to_string());    
+    
+    reqwest::blocking::Client::new().post(url).json(&map).send()?;
+    Ok(())
+}
+
+fn create_clipboard(opt: &Args, client: &reqwest::blocking::Client) -> Result<(), reqwest::Error> {
+    let mut map = HashMap::new();
+    map.insert("contents", "Initial contents");
+    map.insert("passphrase", &opt.passphrase);
+
+    let url = build_url(opt, &"/api/create_clipboard/".to_string());
+
+    client.post(url).json(&map).send()?;    
+    
     Ok(())
 }
 
 fn post_clipboard(
-    contents: &String,
+    contents: &String,    
     opt: &Args,
     client: &reqwest::blocking::Client,
 ) -> Result<(), reqwest::Error> {
+    
     let mut map = HashMap::new();
-    map.insert("text", contents);
-
-    let mut url_string = String::from(&opt.url);
-    url_string.push(':');
-    url_string.push_str(&opt.port);
-    url_string.push_str("/api/set_clipboard/");
-    url_string.push_str(&opt.hostname);
-
-    client.post(url_string).json(&map).send()?;
+    map.insert("contents", contents);
+    map.insert("passphrase", &opt.passphrase);
+    
+    let url = build_url(opt, &"/api/set_clipboard/".to_string());
+    
+    client.post(url).json(&map).send()?;
 
     Ok(())
 }
