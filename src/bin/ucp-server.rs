@@ -44,10 +44,22 @@ fn kill_clipboard(
     }
 }
 
-#[get("/get_clipboard/<hostname>")]
-fn get_clipboard(clipboard: &State<Mutex<HashMap<String, UnifiedClipboard>>>, hostname: String) -> String {
-    let data = clipboard.lock().unwrap();
-    data[&hostname].contents.clone()
+#[get("/get_clipboard/<hostname>", format = "application/json", data = "<auth>")]
+fn get_clipboard(clipboard: &State<Mutex<HashMap<String, UnifiedClipboard>>>, hostname: String, auth: Json<Auth>) -> String {
+    let data = clipboard.lock().unwrap();    
+    
+    if !data.contains_key(&hostname) {
+        return "Clipboard does not exist.".to_string()
+    }
+
+    let this_clip = &data[&hostname];
+
+    if this_clip.passphrase.is_empty() || auth.passphrase == this_clip.passphrase {    
+        data[&hostname].contents.clone()
+    } else {
+        // should return Status or string
+        return "Invalid passphrase.".to_string()
+    }
 }
 
 #[get("/get_clipboards")]
@@ -55,8 +67,7 @@ fn get_clipboards(
     clipboard: &State<Mutex<HashMap<String, UnifiedClipboard>>>,
 ) -> Json<Vec<String>> {
     let data = clipboard.lock().unwrap();
-    // need authentication check here
-    
+     
     let mut keys = Vec::<String>::new();
     for key in data.keys() {
         keys.push(key.to_string());
