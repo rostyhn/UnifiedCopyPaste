@@ -11,8 +11,6 @@ use structopt::StructOpt;
 
 use serde::{Deserialize, Serialize};
 
-
-
 #[derive(Debug, StructOpt, Serialize, Deserialize)]
 struct Args {
     #[structopt(short, long, default_value = "http://localhost")]
