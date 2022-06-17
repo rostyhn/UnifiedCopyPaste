@@ -1,15 +1,17 @@
 extern crate daemonize;
 extern crate x11_clipboard;
 
-use std::fs::File;
 
-use x11_clipboard::Clipboard;
 
 use daemonize::Daemonize;
+use x11_clipboard::Clipboard;
+
 use std::collections::HashMap;
 use structopt::StructOpt;
 
 use serde::{Deserialize, Serialize};
+
+//use websocket::ClientBuilder;
 
 #[derive(Debug, StructOpt, Serialize, Deserialize)]
 struct Args {
@@ -29,9 +31,14 @@ fn main() {
     let mut opt = Args::from_args();
     sanitize_input(&mut opt);
 
-    let stdout = File::create("daemon.out").unwrap();
-    let stderr = File::create("error.log").unwrap();
+//    let stdout = File::create("daemon.out").unwrap();
+//    let stderr = File::create("error.log").unwrap();
 
+    /*let ws_client = ClientBuilder::new("ws://")
+        .unwrap()
+        .connect_insecure()
+        .unwrap();*/
+    
     if opt.kill {
         let status = match std::fs::read_to_string("daemon.pid") {
             Ok(contents) => std::process::Command::new("kill").arg(contents).status(),
@@ -55,15 +62,6 @@ fn main() {
         std::process::exit(1)
     }
 
-    let daemon = Daemonize::new()
-        .stdout(stdout)
-        .stderr(stderr)
-        .pid_file("daemon.pid");
-
-    match daemon.start() {
-        Ok(_) => println!("Started daemon!"),
-        Err(e) => eprintln!("Error starting daemon: {}", e),
-    };
 
     if opt.hostname.trim().is_empty() {
         let hostname = hostname::get().expect("Failed to retrieve hostname.");
@@ -83,17 +81,41 @@ fn main() {
     }
 
     let client = reqwest::blocking::Client::new();
-
+    
     match create_clipboard(&opt, &client) {
         Ok(_) => (),
-        Err(e) => eprintln!("{}", e),
-    };    
+        Err(e) => {
+            eprintln!("{}", e);
+            std::fs::remove_file("arguments.json").expect("Unable to remove file.");
+            std::process::exit(-1)
+        },
+    };
+
+    let daemon = Daemonize::new()
+    //        .stdout(stdout)
+    //        .stderr(stderr)
+        .pid_file("daemon.pid");
+
+    match daemon.start() {
+        Ok(_) => println!("Started daemon!"),
+        Err(e) => {
+            eprintln!("Error starting daemon: {}", e);
+            std::fs::remove_file("daemon.pid").expect("Unable to remove file.");
+            std::fs::remove_file("arguments.json").expect("Unable to remove file.");
+            std::process::exit(-1)
+        }
+    };
     
     let mut last = String::new();
     let clipboard = Clipboard::new().unwrap();
 
     // a little more complex, but removes the need to constantly hit the server.
     // plus, grabs ctrl-c input AND mouse input
+    // keep the websocket client open, send if input changes
+
+    // two vars - current clipboard contents && current server contents
+    // keep each one in memory
+        
     loop {
         if let Ok(curr) = clipboard.load_wait(
             clipboard.getter.atoms.primary,
@@ -107,10 +129,13 @@ fn main() {
                 last = curr.to_owned();
                 match post_clipboard(&last.to_owned(), &opt, &client) {
                     Ok(_) => (),
-                    Err(e) => eprintln!("{}", e),
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        std::process::exit(-1)
+                    }
                 };
             }
-        }
+        }        
     }
 }
 
