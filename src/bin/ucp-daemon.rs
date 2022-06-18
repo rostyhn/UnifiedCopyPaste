@@ -1,17 +1,15 @@
 extern crate daemonize;
 extern crate x11_clipboard;
 
-
-
+use std::fs::File;
 use daemonize::Daemonize;
 use x11_clipboard::Clipboard;
 
 use std::collections::HashMap;
 use structopt::StructOpt;
+use std::path::Path;
 
 use serde::{Deserialize, Serialize};
-
-//use websocket::ClientBuilder;
 
 #[derive(Debug, StructOpt, Serialize, Deserialize)]
 struct Args {
@@ -31,14 +29,9 @@ fn main() {
     let mut opt = Args::from_args();
     sanitize_input(&mut opt);
 
-//    let stdout = File::create("daemon.out").unwrap();
-//    let stderr = File::create("error.log").unwrap();
+    let stdout = File::create("daemon.out").unwrap();
+    let stderr = File::create("error.log").unwrap();
 
-    /*let ws_client = ClientBuilder::new("ws://")
-        .unwrap()
-        .connect_insecure()
-        .unwrap();*/
-    
     if opt.kill {
         let status = match std::fs::read_to_string("daemon.pid") {
             Ok(contents) => std::process::Command::new("kill").arg(contents).status(),
@@ -56,12 +49,16 @@ fn main() {
             Err(e) => eprintln!("{}", e),
         };
 
-        std::fs::remove_file("arguments.json").expect("Unable to remove file.");
-        std::fs::remove_file("daemon.pid").expect("Unable to remove file.");
+        if Path::new("arguments.json").exists() {
+            std::fs::remove_file("arguments.json").expect("Unable to remove file.");
+        }
 
+        if Path::new("daemon.pid").exists() {
+            std::fs::remove_file("daemon.pid").expect("Unable to remove file.");
+        }
+        
         std::process::exit(1)
     }
-
 
     if opt.hostname.trim().is_empty() {
         let hostname = hostname::get().expect("Failed to retrieve hostname.");
@@ -69,8 +66,10 @@ fn main() {
 
         let arguments_json =
             serde_json::to_string(&opt).expect("Failed to convert hostname to JSON.");
+
         // hostname command moves us into /, so we need to return to the executable's directory
         let mut curr_dir = std::env::current_exe().unwrap();
+
         curr_dir.pop();
         std::env::set_current_dir(&curr_dir).expect("Unable to change to new directory.");
 
@@ -80,63 +79,76 @@ fn main() {
         };
     }
 
-    let client = reqwest::blocking::Client::new();
-    
-    match create_clipboard(&opt, &client) {
-        Ok(_) => (),
-        Err(e) => {
-            eprintln!("{}", e);
-            std::fs::remove_file("arguments.json").expect("Unable to remove file.");
-            std::process::exit(-1)
-        },
-    };
+    // don't open a new instance unless PID file is removed
 
-    let daemon = Daemonize::new()
-    //        .stdout(stdout)
-    //        .stderr(stderr)
-        .pid_file("daemon.pid");
+    if !Path::new("daemon.pid").exists() {
 
-    match daemon.start() {
-        Ok(_) => println!("Started daemon!"),
-        Err(e) => {
-            eprintln!("Error starting daemon: {}", e);
-            std::fs::remove_file("daemon.pid").expect("Unable to remove file.");
-            std::fs::remove_file("arguments.json").expect("Unable to remove file.");
-            std::process::exit(-1)
-        }
-    };
-    
-    let mut last = String::new();
-    let clipboard = Clipboard::new().unwrap();
+        let daemon = Daemonize::new()
+            .stdout(stdout)
+            .stderr(stderr)
+            .pid_file("daemon.pid");
 
-    // a little more complex, but removes the need to constantly hit the server.
-    // plus, grabs ctrl-c input AND mouse input
-    // keep the websocket client open, send if input changes
-
-    // two vars - current clipboard contents && current server contents
-    // keep each one in memory
-        
-    loop {
-        if let Ok(curr) = clipboard.load_wait(
-            clipboard.getter.atoms.primary,
-            clipboard.getter.atoms.utf8_string,
-            clipboard.getter.atoms.property,
-        ) {
-            let curr = String::from_utf8_lossy(&curr);
-            let curr = curr.trim_matches('\u{0}').trim();          
-            
-            if !curr.is_empty() && last != curr {
-                last = curr.to_owned();
-                match post_clipboard(&last.to_owned(), &opt, &client) {
-                    Ok(_) => (),
-                    Err(e) => {
-                        eprintln!("{}", e);
-                        std::process::exit(-1)
-                    }
-                };
+        match daemon.start() {
+            Ok(_) => println!("Started daemon!"),
+            Err(e) => {
+                eprintln!("Error starting daemon: {}", e);
+                die()
             }
-        }        
+        };
+
+        let client = reqwest::blocking::Client::new();    
+
+        match create_clipboard(&opt, &client) {
+            Ok(_) => (),
+            Err(e) => {
+                eprintln!("{}", e);
+                die()
+            },
+        };
+
+    
+        let mut last = String::new();
+        let clipboard = Clipboard::new().unwrap();
+        
+        loop {
+            if let Ok(curr) = clipboard.load_wait(
+                clipboard.getter.atoms.primary,
+                clipboard.getter.atoms.utf8_string,
+                clipboard.getter.atoms.property,
+            ) {
+                let curr = String::from_utf8_lossy(&curr);
+                let curr = curr.trim_matches('\u{0}').trim();          
+
+                // dies when the user tries to copy paste something and the server is dead
+                // fine for now
+                if !curr.is_empty() && last != curr {
+                    last = curr.to_owned();
+                    match post_clipboard(&last.to_owned(), &opt, &client) {
+                        Ok(_) => (),
+                        Err(e) => {
+                            eprintln!("{}", e);
+                            die()
+                        }
+                    };
+                }
+            }        
+        }
+    } else {
+        println!("Daemon is already running");
+        std::process::exit(-1)
     }
+}
+
+fn die() {
+
+    let mut curr_dir = std::env::current_exe().unwrap();
+
+    curr_dir.pop();
+    std::env::set_current_dir(&curr_dir).expect("Unable to change to new directory.");
+    
+    std::fs::remove_file("daemon.pid").expect("Unable to remove file.");
+    std::fs::remove_file("arguments.json").expect("Unable to remove file.");
+    std::process::exit(-1)
 }
 
 fn sanitize_input(opt: &mut Args) {
@@ -196,7 +208,7 @@ fn post_clipboard(
     
     let mut map = HashMap::new();
     map.insert("contents", contents);
-    map.insert("passphrase", &opt.passphrase);
+    map.insert("passphrase", &opt.passphrase);   
     
     let url = build_url(opt, &"/api/set_clipboard/".to_string());
     
