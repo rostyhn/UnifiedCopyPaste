@@ -29,7 +29,7 @@ struct Args {
     ssl_enabled: bool
 }
 
-fn main() {
+fn main() -> ! {
 
     let my_instance = SingleInstance::new("ucp-daemon").unwrap();
     
@@ -92,7 +92,7 @@ fn main() {
                     ) {
                         let curr = String::from_utf8_lossy(&curr);
                         let curr = curr.trim_matches('\u{0}').trim();
-
+                        
                         if !curr.is_empty() && last != curr {
                             last = curr.to_owned();
                             match tx.send(Message::text(last.to_owned())) {
@@ -132,8 +132,7 @@ fn main() {
             
             // server listener thread - main
             loop {
-
-                
+                let clipboard = Clipboard::new().unwrap();                
                 for message in receiver.incoming_messages() {
                     let msg = match message {
                         Ok(m) => m,
@@ -163,12 +162,17 @@ fn main() {
                             };
                         },
                         OwnedMessage::Close(_) => {
-                            let _ = tx_1.send(Message::close());
-                            
+                            let _ = tx_1.send(Message::close());                            
                         },                                                    
                         OwnedMessage::Text(d) => {
-                            // switch contents here
-                            dbg!("{}", d);
+                            let d = d.trim_matches('\\').trim();
+                            let d = d.trim_matches('\"').trim();
+                            let d = d.trim_matches('\u{0}').trim();
+                            
+                            match clipboard.store(clipboard.getter.atoms.primary, clipboard.getter.atoms.string, d) {
+                                Ok(_) => (),
+                                Err(e) => eprintln!("{}", e)
+                            };
                         },
                         _ => {
                             eprintln!("Message type not supported.");
