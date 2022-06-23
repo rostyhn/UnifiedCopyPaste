@@ -7,7 +7,6 @@ use structopt::StructOpt;
 use single_instance::SingleInstance;
 use serde::{Deserialize, Serialize};
 
-
 use websocket::client::ClientBuilder;
 use websocket::{OwnedMessage, Message};
 
@@ -257,6 +256,7 @@ fn create_clipboard(opt: &Args, client: &reqwest::blocking::Client) -> Result<()
     Ok(())
 }
 
+/*
 #[deprecated]
 fn set_clipboard(
     contents: &String,
@@ -272,4 +272,4 @@ fn set_clipboard(
     client.post(url).json(&map).send()?;
 
     Ok(())
-}
+}*/
